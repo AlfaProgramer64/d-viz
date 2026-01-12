@@ -5,30 +5,38 @@
   --text-primary: #ffffff;
   --text-secondary: #94a3b8;
   --bg-dark: #0f172a;
+  --accent-color: #3b82f6; /* Varsayılan renk */
 }
 
-* { box-sizing: border-box; padding: 0; margin: 0; }
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
 
+/* --- SAYFA YAPISI VE ORTALAMA --- */
 html, body {
   height: 100%;
   width: 100%;
   margin: 0;
   padding: 0;
+  overflow-x: hidden;
 }
 
 body {
   font-family: 'Inter', sans-serif;
   color: var(--text-primary);
   background-color: var(--bg-dark);
+  /* Arka plan gradient */
   background-image: 
     radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
     radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
     radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
   background-attachment: fixed;
-  background-size: cover; /* Eklendi: Arka planın tam oturması için */
+  background-size: cover;
 }
 
-/* Kapsayıcı: Ekranı tamamen kaplamasını garanti ediyoruz */
+/* Ana Kapsayıcı: Footer'ı aşağı iter, ekranı kaplar */
 .app-wrapper {
   display: flex;
   flex-direction: column;
@@ -36,21 +44,46 @@ body {
   width: 100%;
 }
 
-/* Ana içerik alanı: Flexbox ile tam ortalama */
+/* İçerik Alanı: Kartı tam ortaya getirir */
 .main-content {
-  flex: 1; /* Boş alanı doldur */
+  flex: 1; /* Mevcut boşluğu doldur */
   display: flex;
-  justify-content: center; /* Yatay ortalama */
-  align-items: center;     /* Dikey ortalama */
+  justify-content: center; /* Yatayda ortala */
+  align-items: center;     /* Dikeyde ortala */
   padding: 2rem;
-  width: 100%;             /* Genişliği garanti et */
-}
-
-/* --- DİĞER CSS KODLARIN AYNEN KALABİLİR --- */
-.header, .footer {
-  padding: 1.5rem; text-align: center; backdrop-filter: blur(5px);
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-  flex-shrink: 0;
   width: 100%;
 }
-/* ... geri kalan css kodların ... */
+
+/* --- HEADER & FOOTER --- */
+.header, .footer {
+  padding: 1.5rem;
+  text-align: center;
+  backdrop-filter: blur(5px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
+  width: 100%;
+  z-index: 10;
+}
+
+.footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: none;
+}
+
+.header h1 {
+  font-weight: 600;
+  font-size: 1.5rem;
+  background: linear-gradient(to right, #fff, #94a3b8);
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.footer p {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+/* --- ANA KART TASARIMI (GLASSMORPHISM) --- */
+.content-card {
+  width: 100%;
+  max-width: 9
