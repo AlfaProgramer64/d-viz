@@ -1,4 +1,4 @@
-/* app/globals.css */
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
 
 :root {
@@ -20,17 +20,17 @@ body {
   min-height: 100vh;
 }
 
-/* Uygulama İskeleti ve Dinamik Arka Planlar */
+
 .app-wrapper {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  /* Varsayılan arka plan */
+
   background: linear-gradient(to right, #141e30, #243b55);
   transition: background 0.8s ease-in-out;
 }
 
-/* Dinamik Tema Sınıfları - Tüm Sayfa İçin */
+
 .theme-USD { background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); } /* Koyu Mavi-Yeşil */
 .theme-EUR { background: linear-gradient(135deg, #11998e, #38ef7d); } /* Canlı Yeşil */
 .theme-TRY { background: linear-gradient(135deg, #cb2d3e, #ef473a); } /* Kırmızı */
@@ -47,10 +47,10 @@ body {
   justify-content: center;
   align-items: center;
   padding: 2rem;
-  /* main-container'daki padding buraya taşındı */
+  
 }
 
-/* Ortak Glassmorphism Paneli Stili */
+
 .glass-panel {
   background: var(--glass-bg);
   backdrop-filter: blur(16px);
@@ -73,7 +73,7 @@ body {
 
 .content-card {
   width: 100%;
-  max-width: 800px; /* Genişlik artırıldı */
+  max-width: 800px; 
   padding: 2.5rem;
   border-radius: 24px;
 }
@@ -86,7 +86,7 @@ body {
   font-weight: 400;
 }
 
-/* Select Kutusu Stili */
+
 .control-group {
   margin-bottom: 2rem;
 }
@@ -115,12 +115,12 @@ body {
     background-color: #243b55;
 }
 
-/* Sonuç Alanı ve Grid */
+
 .results-area { min-height: 200px; display: flex; align-items: center; justify-content: center; }
 
 .rates-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Daha esnek grid */
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 15px;
   width: 100%;
 }
@@ -140,7 +140,6 @@ body {
 .currency-label { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.5rem; }
 .currency-value { font-size: 1.4rem; font-weight: 600; }
 
-/* Yükleniyor ve Hata Durumları */
 .state-message {
   text-align: center;
   color: var(--text-secondary);
@@ -153,9 +152,7 @@ body {
 .spin { animation: spin 1s linear infinite; }
 @keyframes spin { 100% { transform: rotate(360deg); } }
 
-/* --- YENİ EKLENEN CSS KODLARI --- */
 
-/* Giriş Alanlarını Yan Yana Dizme */
 .input-row {
   display: flex;
   gap: 20px;
@@ -211,4 +208,55 @@ body {
 .modern-input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
+}
+
+
+
+.section-title {
+  width: 100%;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.gold-item {
+  background: linear-gradient(145deg, rgba(255, 215, 0, 0.1), rgba(255, 165, 0, 0.05));
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.gold-item:hover {
+  background: linear-gradient(145deg, rgba(255, 215, 0, 0.2), rgba(255, 165, 0, 0.1));
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+}
+
+
+.silver-item {
+  background: linear-gradient(145deg, rgba(192, 192, 192, 0.1), rgba(255, 255, 255, 0.05));
+  border: 1px solid rgba(192, 192, 192, 0.3);
+}
+
+
+.icon-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 5px;
+  border-radius: 50%;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gold-bg { background: rgba(255, 165, 0, 0.8); box-shadow: 0 0 10px rgba(255, 165, 0, 0.5); }
+.silver-bg { background: rgba(149, 165, 166, 0.8); }
+
+.theme-TRY .modern-select {
+  border-color: rgba(239, 68, 68, 0.5);
 }
