@@ -1,44 +1,154 @@
-/* Ana konteyner ve geçiş efekti */
-.main-wrapper {
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
+
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --text-primary: #ffffff;
+  --text-secondary: #e2e8f0;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  color: var(--text-primary);
   min-height: 100vh;
-  transition: all 0.5s ease-in-out;
+}
+
+/* Uygulama İskeleti */
+.app-wrapper {
   display: flex;
   flex-direction: column;
-  font-family: sans-serif;
+  min-height: 100vh;
+  /* Header ve Footer için varsayılan koyu arka plan */
+  background: linear-gradient(to right, #141e30, #243b55); 
 }
 
-/* Dinamik Temalar */
-.bg-USD { background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; }
-.bg-EUR { background: linear-gradient(135deg, #065f46, #10b981); color: white; }
-.bg-TRY { background: linear-gradient(135deg, #991b1b, #ef4444); color: white; }
-.bg-default { background: #1f2937; color: white; }
-
-.header, .footer {
-  padding: 2rem;
-  text-align: center;
-  background: rgba(0, 0, 0, 0.3);
-}
-
-.content {
+.main-content {
   flex: 1;
+  display: flex;
+  /* İçeriğin arka planı CurrencyCard içinden gelecek */
+}
+
+/* Ortak Glassmorphism Paneli Stili */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Header & Footer */
+.header, .footer {
+  padding: 1.5rem;
+  text-align: center;
+  z-index: 10; /* Üstte görünsün */
+}
+.header h1 { font-weight: 600; letter-spacing: -1px; }
+.footer p { font-size: 0.9rem; color: var(--text-secondary); }
+
+
+/* --- CURRENCY CARD BİLEŞENİ CSS --- */
+
+/* Dinamik Arka Planlar ve Geçişler */
+.main-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  transition: background 0.8s ease-in-out;
+}
+
+.theme-USD { background: linear-gradient(135deg, #1e5799 0%,#2989d8 50%,#207cca 100%); }
+.theme-EUR { background: linear-gradient(135deg, #0ba360 0%,#3cba92 100%); }
+.theme-TRY { background: linear-gradient(135deg, #eb3349 0%,#f45c43 100%); }
+.theme-GBP { background: linear-gradient(135deg, #614385 0%,#516395 100%); }
+
+/* Kartın Kendisi */
+.content-card {
+  width: 100%;
+  max-width: 500px;
+  padding: 2.5rem;
+  border-radius: 24px;
+}
+
+.card-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1.5rem;
+  font-weight: 400;
+}
+
+/* Select Kutusu Stili */
+.control-group {
+  margin-bottom: 2rem;
+}
+.control-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+.modern-select {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  font-size: 1rem;
+  outline: none;
+  appearance: none; /* Varsayılan oku gizle */
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1.2em;
+}
+.modern-select option {
+    background-color: #243b55; /* Select açılınca koyu arka plan */
+}
+
+/* Sonuç Alanı ve Grid */
+.results-area { min-height: 200px; display: flex; align-items: center; justify-content: center; }
+
+.rates-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  width: 100%;
+}
+
+.rate-item {
+  background: rgba(255,255,255,0.05);
+  padding: 1.5rem;
+  border-radius: 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 2rem;
+  transition: transform 0.2s;
 }
+.rate-item:hover { transform: translateY(-5px); background: rgba(255,255,255,0.1); }
+.rate-item.highlight { background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 215, 0, 0.3); }
 
-select {
-  padding: 12px;
-  border-radius: 8px;
-  font-size: 1.1rem;
-  margin-bottom: 2rem;
-}
+.currency-label { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.5rem; }
+.currency-value { font-size: 1.4rem; font-weight: 600; }
 
-.card {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 2rem;
-  border-radius: 15px;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+/* Yükleniyor ve Hata Durumları */
+.state-message {
+  text-align: center;
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }
+.error { color: #ff6b6b; }
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { 100% { transform: rotate(360deg); } }
