@@ -4,6 +4,7 @@ import Footer from "./components/Footer";
 
 export default function Home() {
   return (
+
     <div className="app-wrapper">
       <Header />
       <main className="main-content">
