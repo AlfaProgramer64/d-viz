@@ -2,7 +2,7 @@
 
 Bu proje, **Web Tabanlı Programlama** dersi final ödevi olarak **Rohat Taş** tarafından geliştirilmiştir. Modern web teknolojileri kullanılarak hazırlanan uygulama, anlık döviz kurları ve emtia (altın/gümüş) fiyatlarını takip etmeyi ve çapraz kur hesaplamaları yapmayı sağlar.
 
-![Proje Ekran Görüntüsü](screenshot-1.png)
+![Proje Ekran Görüntüsü](public/screenshot-1.png)
 
 ## 🚀 Özellikler
 
@@ -54,7 +54,7 @@ Projeyi kendi bilgisayarınızda çalıştırmak için aşağıdaki adımları i
 ## 📷 Ekran Görüntüleri
 
 ### Ana Ekran ve Çevirici
-![Arayüz Detayı](screenshot-2.png)
+![Arayüz Detayı](public/screenshot-1.png)
 
 ---
 **Geliştirici:** Rohat Taş  
