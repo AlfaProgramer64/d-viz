@@ -1,3 +1,4 @@
+/* app/globals.css */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
 
 :root {
@@ -19,19 +20,34 @@ body {
   min-height: 100vh;
 }
 
-/* Uygulama İskeleti */
+/* Uygulama İskeleti ve Dinamik Arka Planlar */
 .app-wrapper {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  /* Header ve Footer için varsayılan koyu arka plan */
-  background: linear-gradient(to right, #141e30, #243b55); 
+  /* Varsayılan arka plan */
+  background: linear-gradient(to right, #141e30, #243b55);
+  transition: background 0.8s ease-in-out;
 }
+
+/* Dinamik Tema Sınıfları - Tüm Sayfa İçin */
+.theme-USD { background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); } /* Koyu Mavi-Yeşil */
+.theme-EUR { background: linear-gradient(135deg, #11998e, #38ef7d); } /* Canlı Yeşil */
+.theme-TRY { background: linear-gradient(135deg, #cb2d3e, #ef473a); } /* Kırmızı */
+.theme-GBP { background: linear-gradient(135deg, #8e2de2, #4a00e0); } /* Mor */
+.theme-JPY { background: linear-gradient(135deg, #fc4a1a, #f7b733); } /* Turuncu-Sarı */
+.theme-AUD { background: linear-gradient(135deg, #00b09b, #96c93d); } /* Turkuaz-Yeşil */
+.theme-CAD { background: linear-gradient(135deg, #c31432, #240b36); } /* Koyu Kırmızı-Mor */
+.theme-CHF { background: linear-gradient(135deg, #FF416C, #FF4B2B); } /* Kırmızı-Pembe */
+.theme-CNY { background: linear-gradient(135deg, #f12711, #f5af19); } /* Kırmızı-Sarı (Ateş) */
 
 .main-content {
   flex: 1;
   display: flex;
-  /* İçeriğin arka planı CurrencyCard içinden gelecek */
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  /* main-container'daki padding buraya taşındı */
 }
 
 /* Ortak Glassmorphism Paneli Stili */
@@ -47,33 +63,19 @@ body {
 .header, .footer {
   padding: 1.5rem;
   text-align: center;
-  z-index: 10; /* Üstte görünsün */
+  z-index: 10;
 }
 .header h1 { font-weight: 600; letter-spacing: -1px; }
-.footer p { font-size: 0.9rem; color: var(--text-secondary); }
+.footer p { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.5rem;}
+.developer-info { font-weight: 600; color: var(--text-primary); }
 
 
 /* --- CURRENCY CARD BİLEŞENİ CSS --- */
 
-/* Dinamik Arka Planlar ve Geçişler */
-.main-container {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 2rem;
-  transition: background 0.8s ease-in-out;
-}
-
-.theme-USD { background: linear-gradient(135deg, #1e5799 0%,#2989d8 50%,#207cca 100%); }
-.theme-EUR { background: linear-gradient(135deg, #0ba360 0%,#3cba92 100%); }
-.theme-TRY { background: linear-gradient(135deg, #eb3349 0%,#f45c43 100%); }
-.theme-GBP { background: linear-gradient(135deg, #614385 0%,#516395 100%); }
-
 /* Kartın Kendisi */
 .content-card {
   width: 100%;
-  max-width: 500px;
+  max-width: 800px; /* Genişlik artırıldı */
   padding: 2.5rem;
   border-radius: 24px;
 }
@@ -105,14 +107,14 @@ body {
   color: white;
   font-size: 1rem;
   outline: none;
-  appearance: none; /* Varsayılan oku gizle */
+  appearance: none;
   background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
   background-repeat: no-repeat;
   background-position: right 1rem center;
   background-size: 1.2em;
 }
 .modern-select option {
-    background-color: #243b55; /* Select açılınca koyu arka plan */
+    background-color: #243b55;
 }
 
 /* Sonuç Alanı ve Grid */
@@ -120,7 +122,7 @@ body {
 
 .rates-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Daha esnek grid */
   gap: 15px;
   width: 100%;
 }
