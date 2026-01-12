@@ -3,14 +3,14 @@ import { useState, useEffect, useCallback } from "react";
 import { ArrowRightLeft, RefreshCw, AlertCircle, Wallet, Coins, TrendingUp } from "lucide-react";
 
 export default function CurrencyCard() {
-  // rawUSDRates: API'den gelen HAM USD bazlı veriler
+  // rawUSDRates: API'den gelen HAM USD bazlı veriler (Base: USD)
   const [rawUSDRates, setRawUSDRates] = useState({});
-  const [base, setBase] = useState("TRY"); // Kullanıcının seçtiği baz para birimi
+  const [base, setBase] = useState("TRY"); // Kullanıcı TRY seçse bile biz arkada USD çekeceğiz
   const [amount, setAmount] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Tema Rengi Belirleme (Vurgu için)
+  // Renk Teması
   const getThemeColor = (currency) => {
     const colors = {
       USD: "#3b82f6", TRY: "#ef4444", EUR: "#10b981", GBP: "#8b5cf6",
@@ -20,13 +20,12 @@ export default function CurrencyCard() {
     return colors[currency] || "#64748b";
   };
 
-  // Veri Çekme: HER ZAMAN USD BAZLI ÇEKİYORUZ
+  // 1. ADIM: SADECE USD VERİSİ ÇEK (Çünkü en dolu veri orada)
   useEffect(() => {
     const fetchUSDRates = async () => {
       setLoading(true);
       setError(null);
       try {
-        // Hile burada: Baz ne olursa olsun USD çekiyoruz
         const response = await fetch(`https://open.er-api.com/v6/latest/USD`);
         if (!response.ok) throw new Error("Veri alınamadı.");
         const data = await response.json();
@@ -40,38 +39,38 @@ export default function CurrencyCard() {
     fetchUSDRates();
   }, []); // Sadece sayfa ilk açıldığında çalışır
 
-  // --- YENİ HESAPLAMA MANTIĞI (Çapraz Kur) ---
+  // 2. ADIM: MATEMATİKSEL DÖNÜŞÜM (Cross Rate)
   
-  // Seçilen 'base' paranın USD karşılığını bulur (Örn: 1 USD = 30 TRY ise, rate 30'dur)
+  // Seçilen paranın (base) USD karşılığı (Örn: 1 USD = 34 TRY)
   const baseUSDRate = rawUSDRates[base] || 1;
 
-  // Standart Döviz Hesaplama
   const calculateCrossRate = useCallback((targetCurrency) => {
     if (!rawUSDRates[targetCurrency] || !baseUSDRate) return "...";
     
-    // Formül: (Hedef Para USD Kuru / Baz Para USD Kuru) * Miktar
-    // Örnek: TRY'den EUR'a geçiş için: (USD/EUR) / (USD/TRY)
-    const crossRate = rawUSDRates[targetCurrency] / baseUSDRate;
-    const result = crossRate * amount;
+    // Formül: (1 USD kaç Hedef Para) / (1 USD kaç Baz Para)
+    // Örnek TRY -> EUR için: (0.92 EUR) / (34 TRY) = 1 TRY kaç EUR
+    const rate = rawUSDRates[targetCurrency] / baseUSDRate;
+    const result = rate * amount;
     
     return result.toLocaleString('tr-TR', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
   }, [rawUSDRates, baseUSDRate, amount]);
 
 
-  // Altın/Gümüş Hesaplama (En garantili yöntem)
+  // 3. ADIM: ALTIN HESAPLAMA (Garantili Yöntem)
   const calculateGold = useCallback((type) => {
-    // XAU (Altın) ve XAG (Gümüş) ONS fiyatları USD bazında gelir.
-    // rawUSDRates.XAU -> 1 USD ile kaç ONS altın alınır (Örn: 0.00049)
-    const usdXauRate = rawUSDRates.XAU;
+    // rawUSDRates.XAU bize "1 USD ile kaç ons altın alınır?" bilgisini verir.
+    // Örn: 0.00038 gibi bir rakam.
+    const usdXauRate = rawUSDRates.XAU; 
     const usdXagRate = rawUSDRates.XAG;
 
     if (!usdXauRate || !usdXagRate || !baseUSDRate) return "---";
 
-    // 1 ONS Altının USD Fiyatı = 1 / usdXauRate
+    // 1 ONS Altının USD Fiyatı = 1 / oran
     const oneOunceGoldInUSD = 1 / usdXauRate;
     const oneOunceSilverInUSD = 1 / usdXagRate;
 
-    // ONS Fiyatını, Seçilen Baz Paraya Çevir (Örn: ONS kaç TL?)
+    // 1 ONS Altının Sizin Seçtiğiniz Paradaki (TRY) Fiyatı
+    // USD Fiyatı * (1 USD kaç TRY)
     const oneOunceGoldInBase = oneOunceGoldInUSD * baseUSDRate;
     const oneOunceSilverInBase = oneOunceSilverInUSD * baseUSDRate;
 
@@ -81,27 +80,26 @@ export default function CurrencyCard() {
     
     let result = 0;
     if (type === "GRAM") result = gramGoldPrice * amount;
-    // Çeyrek Altın: Gram * 1.6065 (Has altın karşılığı) + İşçilik payı (yaklaşık %2-3 ekleyelim) -> ~1.635
+    // Çeyrek Altın: 1.75 Gram ve işçilikle yaklaşık has altın değeri
     if (type === "CEYREK") result = (gramGoldPrice * 1.635) * amount; 
     if (type === "SILVER") result = gramSilverPrice * amount;
 
     return result.toLocaleString('tr-TR', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
   }, [rawUSDRates, baseUSDRate, amount]);
 
-
   const dynamicStyle = { "--accent-color": getThemeColor(base) };
 
   return (
-    <div className="glass-panel content-card" style={dynamicStyle}>
+    <div className="content-card" style={dynamicStyle}>
       <div className="card-header">
-        <h2 style={{color: 'var(--accent-color)'}}> <ArrowRightLeft size={24} /> Döviz & Altın Çevirici</h2>
+        <h2 style={{color: 'var(--accent-color)'}}> <ArrowRightLeft size={28} /> Döviz & Altın Çevirici</h2>
       </div>
 
       <div className="input-row">
         <div className="control-group flex-item">
           <label>Miktar / Adet:</label>
           <div className="input-wrapper">
-             <Wallet size={18} className="input-icon" style={{color: 'var(--accent-color)'}}/>
+             <Wallet size={20} className="input-icon" style={{color: 'var(--accent-color)'}}/>
              <input type="number" min="0" value={amount} onChange={(e) => setAmount(e.target.value)} className="modern-input"/>
           </div>
         </div>
@@ -118,7 +116,6 @@ export default function CurrencyCard() {
             <option value="CAD">🇨🇦 Kanada Doları</option>
             <option value="CHF">🇨🇭 İsviçre Frangı</option>
             <option value="RUB">🇷🇺 Rus Rublesi</option>
-            <option value="SAR">🇸🇦 Suudi Riyali</option>
             <option value="AZN">🇦🇿 Azerbaycan Manatı</option>
           </select>
         </div>
@@ -143,7 +140,7 @@ export default function CurrencyCard() {
                <div className="rate-item"><span className="currency-label">🇷🇺 RUB</span><span className="currency-value">{calculateCrossRate("RUB")} ₽</span></div>
             </div>
 
-            <h3 className="section-title" style={{marginTop: '20px'}}> <Coins size={18} style={{marginRight:'5px', color:'gold'}}/> Altın & Gümüş</h3>
+            <h3 className="section-title"> <Coins size={18} style={{marginRight:'5px', color:'gold'}}/> Altın & Gümüş</h3>
             <div className="rates-grid">
               <div className="rate-item gold-item">
                 <div className="icon-badge gold-bg"><TrendingUp size={16}/></div>
