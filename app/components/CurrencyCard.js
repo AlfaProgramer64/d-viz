@@ -9,6 +9,7 @@ export default function CurrencyCard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Tema renkleri
   const getThemeColor = (currency) => {
     const colors = {
       USD: "#3b82f6", TRY: "#ef4444", EUR: "#10b981", GBP: "#8b5cf6",
@@ -23,7 +24,9 @@ export default function CurrencyCard() {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`https://open.er-api.com/v6/latest/USD`);
+        // API ADRESİNİ DEĞİŞTİRDİK: Daha kararlı ve altın verisi içeren bir API
+        const response = await fetch(`https://api.exchangerate-api.com/v4/latest/USD`);
+        
         if (!response.ok) throw new Error("Veri alınamadı.");
         const data = await response.json();
         setRawUSDRates(data.rates);
@@ -40,27 +43,36 @@ export default function CurrencyCard() {
 
   const calculateCrossRate = useCallback((targetCurrency) => {
     if (!rawUSDRates[targetCurrency] || !baseUSDRate) return "...";
+    // Çapraz kur hesaplama mantığı aynı
     const rate = rawUSDRates[targetCurrency] / baseUSDRate;
     const result = rate * amount;
     return result.toLocaleString('tr-TR', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
   }, [rawUSDRates, baseUSDRate, amount]);
 
   const calculateGold = useCallback((type) => {
+    // API'den gelen verilerde XAU (Altın Ons) ve XAG (Gümüş Ons) var mı kontrol ediyoruz
     const usdXauRate = rawUSDRates.XAU; 
     const usdXagRate = rawUSDRates.XAG;
 
+    // Eğer veri henüz gelmediyse "---" göster
     if (!usdXauRate || !usdXagRate || !baseUSDRate) return "---";
 
+    // MANTIK: 1 XAU = 1 Ons Altın. API bize 1 USD'nin kaç XAU ettiğini verir.
+    // Önce 1 Ons altının kaç USD ettiğini buluyoruz:
     const oneOunceGoldInUSD = 1 / usdXauRate;
     const oneOunceSilverInUSD = 1 / usdXagRate;
+
+    // Sonra bunu seçili para birimine (örneğin TRY) çeviriyoruz:
     const oneOunceGoldInBase = oneOunceGoldInUSD * baseUSDRate;
     const oneOunceSilverInBase = oneOunceSilverInUSD * baseUSDRate;
+
+    // 1 Ons = 31.1035 gramdır.
     const gramGoldPrice = oneOunceGoldInBase / 31.1035;
     const gramSilverPrice = oneOunceSilverInBase / 31.1035;
     
     let result = 0;
     if (type === "GRAM") result = gramGoldPrice * amount;
-    if (type === "CEYREK") result = (gramGoldPrice * 1.635) * amount; 
+    if (type === "CEYREK") result = (gramGoldPrice * 1.75) * amount; // Çeyrekte işçilik vs. için katsayı genelde 1.75 veya 1.635 alınır, piyasaya göre güncelledim.
     if (type === "SILVER") result = gramSilverPrice * amount;
 
     return result.toLocaleString('tr-TR', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
@@ -91,10 +103,6 @@ export default function CurrencyCard() {
             <option value="EUR">🇪🇺 Euro (EUR)</option>
             <option value="GBP">🇬🇧 Sterlin (GBP)</option>
             <option value="JPY">🇯🇵 Japon Yeni (JPY)</option>
-            <option value="AUD">🇦🇺 Avustralya Doları</option>
-            <option value="CAD">🇨🇦 Kanada Doları</option>
-            <option value="CHF">🇨🇭 İsviçre Frangı</option>
-            <option value="RUB">🇷🇺 Rus Rublesi</option>
             <option value="AZN">🇦🇿 Azerbaycan Manatı</option>
           </select>
         </div>
@@ -102,12 +110,12 @@ export default function CurrencyCard() {
 
       <div className="results-area">
         {loading && (
-          <div className="state-message"><RefreshCw className="spin" size={30} /><p>Veriler alınıyor...</p></div>
+          <div className="state-message"><RefreshCw className="spin" size={30} /><p>Veriler güncelleniyor...</p></div>
         )}
         
         {error && <div className="state-message error"><AlertCircle /> {error}</div>}
 
-        {!loading && !error && rawUSDRates.USD && (
+        {!loading && !error && (
           <>
             <h3 className="section-title">Döviz Kurları</h3>
             <div className="rates-grid">
@@ -116,22 +124,21 @@ export default function CurrencyCard() {
                {base !== "EUR" && <div className="rate-item"><span className="currency-label">🇪🇺 EUR</span><span className="currency-value">{calculateCrossRate("EUR")} €</span></div>}
                {base !== "GBP" && <div className="rate-item"><span className="currency-label">🇬🇧 GBP</span><span className="currency-value">{calculateCrossRate("GBP")} £</span></div>}
                <div className="rate-item"><span className="currency-label">🇯🇵 JPY</span><span className="currency-value">{calculateCrossRate("JPY")} ¥</span></div>
-               <div className="rate-item"><span className="currency-label">🇷🇺 RUB</span><span className="currency-value">{calculateCrossRate("RUB")} ₽</span></div>
             </div>
 
             <h3 className="section-title"> <Coins size={18} style={{marginRight:'5px', color:'gold'}}/> Altın & Gümüş</h3>
             <div className="rates-grid">
-              <div className="rate-item gold-item" style={{position: 'relative'}}>
+              <div className="rate-item gold-item">
                 <div className="icon-badge gold-bg"><TrendingUp size={16}/></div>
                 <span className="currency-label">Gram Altın (24K)</span>
                 <span className="currency-value">{calculateGold("GRAM")} {base === 'TRY' ? '₺' : base}</span>
               </div>
-              <div className="rate-item gold-item" style={{position: 'relative'}}>
+              <div className="rate-item gold-item">
                  <div className="icon-badge gold-bg"><Coins size={16}/></div>
                 <span className="currency-label">Çeyrek Altın</span>
                 <span className="currency-value">{calculateGold("CEYREK")} {base === 'TRY' ? '₺' : base}</span>
               </div>
-              <div className="rate-item silver-item" style={{position: 'relative'}}>
+              <div className="rate-item silver-item">
                 <div className="icon-badge silver-bg"><TrendingUp size={16}/></div>
                 <span className="currency-label">Gram Gümüş</span>
                 <span className="currency-value">{calculateGold("SILVER")} {base === 'TRY' ? '₺' : base}</span>
