@@ -3,14 +3,12 @@ import { useState, useEffect, useCallback } from "react";
 import { ArrowRightLeft, RefreshCw, AlertCircle, Wallet, Coins, TrendingUp } from "lucide-react";
 
 export default function CurrencyCard() {
-  // rawUSDRates: API'den gelen HAM USD bazlı veriler (Base: USD)
   const [rawUSDRates, setRawUSDRates] = useState({});
-  const [base, setBase] = useState("TRY"); // Kullanıcı TRY seçse bile biz arkada USD çekeceğiz
+  const [base, setBase] = useState("TRY");
   const [amount, setAmount] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Renk Teması
   const getThemeColor = (currency) => {
     const colors = {
       USD: "#3b82f6", TRY: "#ef4444", EUR: "#10b981", GBP: "#8b5cf6",
@@ -20,7 +18,6 @@ export default function CurrencyCard() {
     return colors[currency] || "#64748b";
   };
 
-  // 1. ADIM: SADECE USD VERİSİ ÇEK (Çünkü en dolu veri orada)
   useEffect(() => {
     const fetchUSDRates = async () => {
       setLoading(true);
@@ -37,50 +34,32 @@ export default function CurrencyCard() {
       }
     };
     fetchUSDRates();
-  }, []); // Sadece sayfa ilk açıldığında çalışır
+  }, []);
 
-  // 2. ADIM: MATEMATİKSEL DÖNÜŞÜM (Cross Rate)
-  
-  // Seçilen paranın (base) USD karşılığı (Örn: 1 USD = 34 TRY)
   const baseUSDRate = rawUSDRates[base] || 1;
 
   const calculateCrossRate = useCallback((targetCurrency) => {
     if (!rawUSDRates[targetCurrency] || !baseUSDRate) return "...";
-    
-    // Formül: (1 USD kaç Hedef Para) / (1 USD kaç Baz Para)
-    // Örnek TRY -> EUR için: (0.92 EUR) / (34 TRY) = 1 TRY kaç EUR
     const rate = rawUSDRates[targetCurrency] / baseUSDRate;
     const result = rate * amount;
-    
     return result.toLocaleString('tr-TR', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
   }, [rawUSDRates, baseUSDRate, amount]);
 
-
-  // 3. ADIM: ALTIN HESAPLAMA (Garantili Yöntem)
   const calculateGold = useCallback((type) => {
-    // rawUSDRates.XAU bize "1 USD ile kaç ons altın alınır?" bilgisini verir.
-    // Örn: 0.00038 gibi bir rakam.
     const usdXauRate = rawUSDRates.XAU; 
     const usdXagRate = rawUSDRates.XAG;
 
     if (!usdXauRate || !usdXagRate || !baseUSDRate) return "---";
 
-    // 1 ONS Altının USD Fiyatı = 1 / oran
     const oneOunceGoldInUSD = 1 / usdXauRate;
     const oneOunceSilverInUSD = 1 / usdXagRate;
-
-    // 1 ONS Altının Sizin Seçtiğiniz Paradaki (TRY) Fiyatı
-    // USD Fiyatı * (1 USD kaç TRY)
     const oneOunceGoldInBase = oneOunceGoldInUSD * baseUSDRate;
     const oneOunceSilverInBase = oneOunceSilverInUSD * baseUSDRate;
-
-    // Gram Fiyatı (1 ONS = 31.1035 Gram)
     const gramGoldPrice = oneOunceGoldInBase / 31.1035;
     const gramSilverPrice = oneOunceSilverInBase / 31.1035;
     
     let result = 0;
     if (type === "GRAM") result = gramGoldPrice * amount;
-    // Çeyrek Altın: 1.75 Gram ve işçilikle yaklaşık has altın değeri
     if (type === "CEYREK") result = (gramGoldPrice * 1.635) * amount; 
     if (type === "SILVER") result = gramSilverPrice * amount;
 
@@ -142,17 +121,17 @@ export default function CurrencyCard() {
 
             <h3 className="section-title"> <Coins size={18} style={{marginRight:'5px', color:'gold'}}/> Altın & Gümüş</h3>
             <div className="rates-grid">
-              <div className="rate-item gold-item">
+              <div className="rate-item gold-item" style={{position: 'relative'}}>
                 <div className="icon-badge gold-bg"><TrendingUp size={16}/></div>
                 <span className="currency-label">Gram Altın (24K)</span>
                 <span className="currency-value">{calculateGold("GRAM")} {base === 'TRY' ? '₺' : base}</span>
               </div>
-              <div className="rate-item gold-item">
+              <div className="rate-item gold-item" style={{position: 'relative'}}>
                  <div className="icon-badge gold-bg"><Coins size={16}/></div>
                 <span className="currency-label">Çeyrek Altın</span>
                 <span className="currency-value">{calculateGold("CEYREK")} {base === 'TRY' ? '₺' : base}</span>
               </div>
-              <div className="rate-item silver-item">
+              <div className="rate-item silver-item" style={{position: 'relative'}}>
                 <div className="icon-badge silver-bg"><TrendingUp size={16}/></div>
                 <span className="currency-label">Gram Gümüş</span>
                 <span className="currency-value">{calculateGold("SILVER")} {base === 'TRY' ? '₺' : base}</span>
