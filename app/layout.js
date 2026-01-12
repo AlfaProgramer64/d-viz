@@ -1,34 +1,21 @@
 import "./globals.css";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
 
 export const metadata = {
-  title: "Döviz Takip Sistemi",
-  description: "Anlık kur bilgilerini takip edin",
+  title: "Modern Döviz Takip",
+  description: "React Final Ödevi",
 };
-
-function Header() {
-  return (
-    <header className="header">
-      <h1>💰 Kur Takip Sistemi</h1>
-      <p>API kullanarak anlık döviz kurlarını listeleyin.</p>
-    </header>
-  );
-}
-
-function Footer() {
-  return (
-    <footer className="footer">
-      <p>&copy; 2026 Final Ödevi - Tüm Hakları Saklıdır.</p>
-    </footer>
-  );
-}
 
 export default function RootLayout({ children }) {
   return (
     <html lang="tr">
       <body>
-        <Header />
-        {children}
-        <Footer />
+        <div className="app-wrapper">
+          <Header />
+          <main className="main-content">{children}</main>
+          <Footer />
+        </div>
       </body>
     </html>
   );
