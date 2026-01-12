@@ -59,7 +59,7 @@ body {
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
 }
 
-/* Header & Footer */
+
 .header, .footer {
   padding: 1.5rem;
   text-align: center;
@@ -70,9 +70,7 @@ body {
 .developer-info { font-weight: 600; color: var(--text-primary); }
 
 
-/* --- CURRENCY CARD BİLEŞENİ CSS --- */
 
-/* Kartın Kendisi */
 .content-card {
   width: 100%;
   max-width: 800px; /* Genişlik artırıldı */
@@ -154,3 +152,63 @@ body {
 .error { color: #ff6b6b; }
 .spin { animation: spin 1s linear infinite; }
 @keyframes spin { 100% { transform: rotate(360deg); } }
+
+/* --- YENİ EKLENEN CSS KODLARI --- */
+
+/* Giriş Alanlarını Yan Yana Dizme */
+.input-row {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 2rem;
+}
+
+.flex-item {
+  flex: 1; 
+}
+
+
+@media (max-width: 600px) {
+  .input-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--text-secondary);
+  z-index: 2;
+}
+
+.modern-input {
+  width: 100%;
+  padding: 12px 12px 12px 40px; 
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  font-size: 1.1rem; 
+  font-weight: 600;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.modern-input:focus, .modern-select:focus {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+}
+
+.modern-input::-webkit-outer-spin-button,
+.modern-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
