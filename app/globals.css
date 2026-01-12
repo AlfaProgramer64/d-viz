@@ -1,0 +1,44 @@
+/* Ana konteyner ve geçiş efekti */
+.main-wrapper {
+  min-height: 100vh;
+  transition: all 0.5s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  font-family: sans-serif;
+}
+
+/* Dinamik Temalar */
+.bg-USD { background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; }
+.bg-EUR { background: linear-gradient(135deg, #065f46, #10b981); color: white; }
+.bg-TRY { background: linear-gradient(135deg, #991b1b, #ef4444); color: white; }
+.bg-default { background: #1f2937; color: white; }
+
+.header, .footer {
+  padding: 2rem;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+select {
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2rem;
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
