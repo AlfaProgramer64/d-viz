@@ -1,21 +1,48 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { ArrowRightLeft, RefreshCw, Wallet, TrendingUp, Coins } from "lucide-react";
+import { 
+  ArrowRightLeft, 
+  RefreshCw, 
+  Wallet, 
+  TrendingUp, 
+  Coins, 
+  ArrowDownUp
+} from "lucide-react";
 
 export default function CurrencyCard() {
   const [rates, setRates] = useState({});
-  const [base, setBase] = useState("TRY");
   const [amount, setAmount] = useState(1);
+  const [fromCurrency, setFromCurrency] = useState("TRY"); // Kaynak Para
+  const [toCurrency, setToCurrency] = useState("USD");     // Hedef Para
   const [loading, setLoading] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState("");
 
-  // API'den veri çekme (Exchangerate-API v4 kullanıyoruz, daha stabil)
+  // --- AYARLAR ---
+  const currencyConfig = {
+    TRY: { symbol: "₺", color: "#ef4444", name: "Türk Lirası", flag: "🇹🇷" },
+    USD: { symbol: "$", color: "#3b82f6", name: "Amerikan Doları", flag: "🇺🇸" },
+    EUR: { symbol: "€", color: "#10b981", name: "Euro", flag: "🇪🇺" },
+    GBP: { symbol: "£", color: "#8b5cf6", name: "Sterlin", flag: "🇬🇧" },
+    JPY: { symbol: "¥", color: "#f59e0b", name: "Japon Yeni", flag: "🇯🇵" },
+    AZN: { symbol: "₼", color: "#06b6d4", name: "Azerbaycan Manatı", flag: "🇦🇿" },
+    RUB: { symbol: "₽", color: "#9ca3af", name: "Rus Rublesi", flag: "🇷🇺" },
+    CHF: { symbol: "₣", color: "#e11d48", name: "İsviçre Frangı", flag: "🇨🇭" },
+  };
+
+  const getConfig = (code) => currencyConfig[code] || { symbol: code, color: "#cbd5e1", name: code, flag: "🌐" };
+  
+  // Temayı "Kaynak" paraya göre ayarla
+  const currentTheme = getConfig(fromCurrency);
+
+  // --- API ---
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const res = await fetch("https://api.exchangerate-api.com/v4/latest/USD");
+        const res = await fetch("https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json");
         const data = await res.json();
-        setRates(data.rates);
+        setRates(data.usd);
+        setLastUpdate(data.date);
       } catch (error) {
         console.error("Hata:", error);
       } finally {
@@ -25,49 +52,75 @@ export default function CurrencyCard() {
     fetchData();
   }, []);
 
-  // Hesaplama Fonksiyonu
-  const calculate = useCallback((target) => {
-    if (!rates[target] || !rates[base]) return "...";
-    // Formül: (Hedef Kur / Baz Kur) * Miktar
-    const result = (rates[target] / rates[base]) * amount;
+  // --- HESAPLAMA ---
+  const convertCurrency = () => {
+    const fromRate = rates[fromCurrency.toLowerCase()];
+    const toRate = rates[toCurrency.toLowerCase()];
+
+    if (!fromRate || !toRate) return "---";
+
+    // (Miktar / KaynakKur) * HedefKur
+    // Not: API USD tabanlı olduğu için önce USD'ye çevirip sonra hedefe gidiyoruz.
+    const result = (amount / fromRate) * toRate;
     return result.toLocaleString("tr-TR", { maximumFractionDigits: 2, minimumFractionDigits: 2 });
-  }, [rates, base, amount]);
+  };
 
-  // Altın Hesaplama Fonksiyonu
-  const calculateGold = useCallback((type) => {
-    // API'den XAU (Altın) ve XAG (Gümüş) 1 USD karşılığı gelir.
-    if (!rates.XAU || !rates.XAG || !rates[base]) return "---";
+  // Birim Fiyat (Örn: 1 USD = 32.50 TRY)
+  const getExchangeRate = () => {
+    const fromRate = rates[fromCurrency.toLowerCase()];
+    const toRate = rates[toCurrency.toLowerCase()];
+    if (!fromRate || !toRate) return "...";
+    
+    const rate = (1 / fromRate) * toRate;
+    return rate.toLocaleString("tr-TR", { maximumFractionDigits: 4 });
+  };
 
-    // 1 Ons Altının Dolar Fiyatı = 1 / XAU Oranı
-    const onsGoldUSD = 1 / rates.XAU;
-    const onsSilverUSD = 1 / rates.XAG;
+  // Yer Değiştirme (Swap) Fonksiyonu
+  const swapCurrencies = () => {
+    setFromCurrency(toCurrency);
+    setToCurrency(fromCurrency);
+  };
 
-    // Seçili para birimine (örn: TRY) çevir
-    const onsGoldBase = onsGoldUSD * rates[base];
-    const onsSilverBase = onsSilverUSD * rates[base];
+  // Altın Hesaplama (Kaynak paraya göre)
+  const calculateMetal = useCallback((type) => {
+    const rateXAU = rates.xau;
+    const rateXAG = rates.xag;
+    const rateBase = rates[fromCurrency.toLowerCase()];
 
-    // 1 Ons = 31.10 gram
-    const gramGold = onsGoldBase / 31.1035;
-    const gramSilver = onsSilverBase / 31.1035;
+    if (!rateXAU || !rateXAG || !rateBase) return "---";
+
+    const onsGoldPrice = rateBase / rateXAU;
+    const onsSilverPrice = rateBase / rateXAG;
+    const gramGold = onsGoldPrice / 31.1035;
+    const gramSilver = onsSilverPrice / 31.1035;
 
     let val = 0;
-    if (type === "GRAM") val = gramGold * amount;
-    if (type === "CEYREK") val = (gramGold * 1.75) * amount; // Çeyrek katsayısı
-    if (type === "SILVER") val = gramSilver * amount;
+    if (type === "GRAM_ALTIN") val = gramGold;
+    if (type === "CEYREK") val = gramGold * 1.75;
+    if (type === "GRAM_GUMUS") val = gramSilver;
 
     return val.toLocaleString("tr-TR", { maximumFractionDigits: 2, minimumFractionDigits: 2 });
-  }, [rates, base, amount]);
+  }, [rates, fromCurrency]);
+
+  const dynamicStyle = { "--theme-color": currentTheme.color };
 
   return (
-    <div className="content-card">
-      <div style={{textAlign:'center', marginBottom:'20px'}}>
-        <h2><ArrowRightLeft style={{verticalAlign:'middle'}}/> Döviz Çevirici</h2>
+    <div className="content-card" style={dynamicStyle}>
+      <div className="card-header">
+        <h2 style={{color: 'var(--theme-color)'}}>
+           <RefreshCw size={24}/> Döviz Çevirici
+        </h2>
+        <span className="date-badge">{lastUpdate}</span>
       </div>
 
-      <div className="input-row">
-        <div className="flex-item control-group">
+      {/* --- ANA ÇEVİRİ ALANI --- */}
+      <div className="converter-section">
+        
+        {/* MİKTAR GİRİŞİ */}
+        <div className="input-block">
           <label>Miktar</label>
-          <div className="input-wrapper">
+          <div className="input-wrapper focus-effect">
+            <Wallet className="input-icon" style={{color: 'var(--theme-color)'}} size={20}/>
             <input 
               type="number" 
               value={amount} 
@@ -76,48 +129,86 @@ export default function CurrencyCard() {
             />
           </div>
         </div>
-        <div className="flex-item control-group">
-          <label>Para Birimi</label>
-          <select value={base} onChange={(e) => setBase(e.target.value)} className="modern-select">
-            <option value="TRY">TRY - Türk Lirası</option>
-            <option value="USD">USD - Amerikan Doları</option>
-            <option value="EUR">EUR - Euro</option>
-            <option value="GBP">GBP - İngiliz Sterlini</option>
-            <option value="JPY">JPY - Japon Yeni</option>
-            <option value="AZN">AZN - Azerbaycan Manatı</option>
-          </select>
+
+        {/* SEÇİM ALANI (YAN YANA) */}
+        <div className="selection-row">
+          
+          {/* KAYNAK PARA */}
+          <div className="select-block">
+            <label>Şundan:</label>
+            <div className="input-wrapper focus-effect">
+              <span className="input-icon flag-icon">{getConfig(fromCurrency).flag}</span>
+              <select 
+                value={fromCurrency} 
+                onChange={(e) => setFromCurrency(e.target.value)} 
+                className="modern-select"
+              >
+                {Object.keys(currencyConfig).map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {/* SWAP BUTONU */}
+          <button className="swap-btn" onClick={swapCurrencies} title="Değiştir">
+            <ArrowRightLeft size={20} />
+          </button>
+
+          {/* HEDEF PARA */}
+          <div className="select-block">
+            <label>Şuna:</label>
+            <div className="input-wrapper focus-effect">
+              <span className="input-icon flag-icon">{getConfig(toCurrency).flag}</span>
+              <select 
+                value={toCurrency} 
+                onChange={(e) => setToCurrency(e.target.value)} 
+                className="modern-select"
+              >
+                 {Object.keys(currencyConfig).map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* SONUÇ EKRANI */}
+        <div className="result-display">
+          {loading ? <p>Hesaplanıyor...</p> : (
+            <>
+              <div className="result-main">
+                {convertCurrency()} <span className="result-symbol">{getConfig(toCurrency).symbol}</span>
+              </div>
+              <div className="exchange-rate-info">
+                1 {fromCurrency} = {getExchangeRate()} {toCurrency}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
-      {loading ? (
-        <div style={{textAlign:'center', color:'#94a3b8'}}><RefreshCw className="spin"/> Yükleniyor...</div>
-      ) : (
-        <>
-          <h3 className="section-title">Döviz Kurları</h3>
-          <div className="rates-grid">
-            {base !== "TRY" && <div className="rate-item"><span className="currency-label">TRY</span><span className="currency-value">{calculate("TRY")} ₺</span></div>}
-            {base !== "USD" && <div className="rate-item"><span className="currency-label">USD</span><span className="currency-value">{calculate("USD")} $</span></div>}
-            {base !== "EUR" && <div className="rate-item"><span className="currency-label">EUR</span><span className="currency-value">{calculate("EUR")} €</span></div>}
-            {base !== "GBP" && <div className="rate-item"><span className="currency-label">GBP</span><span className="currency-value">{calculate("GBP")} £</span></div>}
-          </div>
+      {/* --- ALT BİLGİ: ALTIN PİYASASI --- */}
+      <h3 className="section-title" style={{marginTop:'30px'}}>
+        <TrendingUp size={18} color="#eab308"/> {fromCurrency} Bazında Emtia
+      </h3>
+      <div className="rates-grid">
+         <MetalBox label="Gram Altın" value={calculateMetal("GRAM_ALTIN")} currency={getConfig(fromCurrency).symbol} type="gold" />
+         <MetalBox label="Çeyrek Altın" value={calculateMetal("CEYREK")} currency={getConfig(fromCurrency).symbol} type="gold" />
+         <MetalBox label="Gram Gümüş" value={calculateMetal("GRAM_GUMUS")} currency={getConfig(fromCurrency).symbol} type="silver" />
+      </div>
 
-          <h3 className="section-title"><TrendingUp size={16}/> Altın & Gümüş</h3>
-          <div className="rates-grid">
-            <div className="rate-item gold-item">
-              <span className="currency-label">Gram Altın</span>
-              <span className="currency-value">{calculateGold("GRAM")}</span>
-            </div>
-            <div className="rate-item gold-item">
-              <span className="currency-label">Çeyrek Altın</span>
-              <span className="currency-value">{calculateGold("CEYREK")}</span>
-            </div>
-            <div className="rate-item silver-item">
-              <span className="currency-label">Gram Gümüş</span>
-              <span className="currency-value">{calculateGold("SILVER")}</span>
-            </div>
-          </div>
-        </>
-      )}
+    </div>
+  );
+}
+
+function MetalBox({ label, value, currency, type }) {
+  const isGold = type === 'gold';
+  return (
+    <div className={`rate-item ${isGold ? 'gold-glow' : 'silver-glow'}`}>
+      <div className="icon-badge">
+        <Coins size={16} color={isGold ? '#facc15' : '#cbd5e1'} />
+      </div>
+      <span className="currency-label">{label}</span>
+      <span className={`currency-value ${isGold ? 'gold-text' : 'silver-text'}`}>
+        {value} <span style={{fontSize:'0.6em'}}>{currency}</span>
+      </span>
     </div>
   );
 }
