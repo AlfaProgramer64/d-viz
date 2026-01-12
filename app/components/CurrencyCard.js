@@ -2,12 +2,25 @@
 import { useState, useEffect } from "react";
 import { ArrowRightLeft, RefreshCw, AlertCircle, Wallet, Coins, TrendingUp } from "lucide-react";
 
-export default function CurrencyCard({ onCurrencyChange }) {
+export default function CurrencyCard() {
   const [rates, setRates] = useState({});
-  const [base, setBase] = useState("TRY"); // Varsayılanı TRY yaptık ki altın fiyatı mantıklı görünsün
+  const [base, setBase] = useState("TRY"); // Başlangıç TRY olsun
   const [amount, setAmount] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Tema Rengi Belirleme (Sadece vurgu için)
+  const getThemeColor = (currency) => {
+    const colors = {
+      USD: "#3b82f6", // Mavi
+      EUR: "#10b981", // Yeşil
+      TRY: "#ef4444", // Kırmızı
+      GBP: "#8b5cf6", // Mor
+      JPY: "#f59e0b", // Turuncu
+      XAU: "#eab308", // Altın Sarısı
+    };
+    return colors[currency] || "#64748b"; // Varsayılan Gri
+  };
 
   useEffect(() => {
     const fetchRates = async () => {
@@ -16,12 +29,12 @@ export default function CurrencyCard({ onCurrencyChange }) {
       try {
         await new Promise(r => setTimeout(r, 300));
         
+        // API'den veriyi çek
         const response = await fetch(`https://open.er-api.com/v6/latest/${base}`);
-        if (!response.ok) throw new Error("Sunucudan veri alınamadı.");
+        if (!response.ok) throw new Error("Veri alınamadı.");
         const data = await response.json();
         setRates(data.rates);
         
-        onCurrencyChange(base);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -30,62 +43,66 @@ export default function CurrencyCard({ onCurrencyChange }) {
     };
 
     fetchRates();
-  }, [base, onCurrencyChange]);
+  }, [base]);
 
   // --- HESAPLAMA FONKSİYONLARI ---
-
-  // Standart Para Birimi Hesapla
-  const calculateRate = (rate) => {
-    if (!rate) return "---";
-    return (rate * amount).toLocaleString('tr-TR', { maximumFractionDigits: 2 });
+  
+  const calculateRate = (targetCurrency) => {
+    if (!rates || !rates[targetCurrency]) return "...";
+    const val = rates[targetCurrency] * amount;
+    return val.toLocaleString('tr-TR', { maximumFractionDigits: 2 });
   };
 
-  // Altın/Gümüş Hesapla (Ons -> Gram -> Adet)
-  // Mantık: 1 Birim Baz Para (örn TRY) = X Ons Altın (rates.XAU)
-  // 1 Ons Altın Fiyatı = 1 / rates.XAU
   const calculateGold = (type) => {
+    // API bazen XAU (Altın) vermeyebilir, kontrol edelim
     if (!rates.XAU || !rates.XAG) return "---";
 
-    const ozPrice = 1 / rates.XAU; // 1 Ons Altının Baz Para cinsinden değeri
-    const gramPrice = ozPrice / 31.1035; // 1 Gram fiyatı
+    // 1 Ons Altının Baz Para cinsinden değeri = 1 / rates.XAU
+    const ozPrice = 1 / rates.XAU; 
+    const gramPrice = ozPrice / 31.1035; 
     
-    // Girilen miktar ile çarpıyoruz (Örn: 5 tane çeyrek ne kadar?)
-    if (type === "GRAM") return (gramPrice * amount).toLocaleString('tr-TR', { maximumFractionDigits: 2 });
-    if (type === "CEYREK") return ((gramPrice * 1.63) * amount).toLocaleString('tr-TR', { maximumFractionDigits: 2 });
-    
-    // Gümüş
-    const ozSilver = 1 / rates.XAG;
-    const gramSilver = ozSilver / 31.1035;
-    if (type === "SILVER") return (gramSilver * amount).toLocaleString('tr-TR', { maximumFractionDigits: 2 });
+    let result = 0;
+    if (type === "GRAM") result = gramPrice * amount;
+    if (type === "CEYREK") result = (gramPrice * 1.63) * amount; // 1.63 katsayısı (22 ayar + işçilik simülasyonu)
+    if (type === "SILVER") {
+        const ozSilver = 1 / rates.XAG;
+        result = (ozSilver / 31.1035) * amount;
+    }
+
+    return result.toLocaleString('tr-TR', { maximumFractionDigits: 2 });
+  };
+
+  // Dinamik Stil (CSS Variable olarak rengi karta atıyoruz)
+  const dynamicStyle = {
+    "--accent-color": getThemeColor(base),
   };
 
   return (
-    <div className="glass-panel content-card">
+    <div className="glass-panel content-card" style={dynamicStyle}>
       <div className="card-header">
-        <h2> <ArrowRightLeft size={24} /> Döviz & Altın Çevirici</h2>
+        <h2 style={{color: 'var(--accent-color)'}}> <ArrowRightLeft size={24} /> Döviz & Altın Çevirici</h2>
       </div>
 
       <div className="input-row">
+        {/* Miktar */}
         <div className="control-group flex-item">
-          <label htmlFor="amount-input">Miktar / Adet:</label>
+          <label>Miktar / Adet:</label>
           <div className="input-wrapper">
-             <Wallet size={18} className="input-icon" />
+             <Wallet size={18} className="input-icon" style={{color: 'var(--accent-color)'}}/>
              <input
-              id="amount-input"
               type="number"
               min="0"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               className="modern-input"
-              placeholder="1"
             />
           </div>
         </div>
 
+        {/* Para Birimi Seçimi */}
         <div className="control-group flex-item">
-          <label htmlFor="currency-select">Baz Para Birimi:</label>
+          <label>Baz Para Birimi:</label>
           <select 
-            id="currency-select"
             value={base} 
             onChange={(e) => setBase(e.target.value)}
             className="modern-select"
@@ -94,70 +111,78 @@ export default function CurrencyCard({ onCurrencyChange }) {
             <option value="USD">🇺🇸 Amerikan Doları (USD)</option>
             <option value="EUR">🇪🇺 Euro (EUR)</option>
             <option value="GBP">🇬🇧 Sterlin (GBP)</option>
+            <option value="JPY">🇯🇵 Japon Yeni (JPY)</option>
+            <option value="AUD">🇦🇺 Avustralya Doları</option>
+            <option value="CAD">🇨🇦 Kanada Doları</option>
+            <option value="CHF">🇨🇭 İsviçre Frangı</option>
+            <option value="RUB">🇷🇺 Rus Rublesi</option>
+            <option value="SAR">🇸🇦 Suudi Riyali</option>
+            <option value="AZN">🇦🇿 Azerbaycan Manatı</option>
           </select>
         </div>
       </div>
 
       <div className="results-area">
         {loading && (
-          <div className="state-message loading">
+          <div className="state-message">
             <RefreshCw className="spin" size={30} />
-            <p>Piyasalar yükleniyor...</p>
+            <p>Piyasalar güncelleniyor...</p>
           </div>
         )}
         
-        {error && (
-          <div className="state-message error">
-            <AlertCircle size={30} />
-            <p>{error}</p>
-          </div>
-        )}
+        {error && <div className="state-message error"><AlertCircle /> {error}</div>}
 
         {!loading && !error && (
           <>
-            {/* DÖVİZ BÖLÜMÜ */}
             <h3 className="section-title">Döviz Kurları</h3>
             <div className="rates-grid">
-               {/* TRY Seçiliyse gösterme, değilse göster mantığı */}
+               {/* Base TRY ise onu gösterme */}
                {base !== "TRY" && (
-                <div className="rate-item highlight">
+                <div className="rate-item">
                     <span className="currency-label">🇹🇷 TRY</span>
-                    <span className="currency-value">{calculateRate(rates.TRY)} ₺</span>
+                    <span className="currency-value">{calculateRate("TRY")} ₺</span>
                 </div>
                )}
+               {base !== "USD" && (
               <div className="rate-item">
                 <span className="currency-label">🇺🇸 USD</span>
-                <span className="currency-value">{calculateRate(rates.USD)} $</span>
+                <span className="currency-value">{calculateRate("USD")} $</span>
               </div>
+               )}
+               {base !== "EUR" && (
               <div className="rate-item">
                 <span className="currency-label">🇪🇺 EUR</span>
-                <span className="currency-value">{calculateRate(rates.EUR)} €</span>
+                <span className="currency-value">{calculateRate("EUR")} €</span>
               </div>
+               )}
+               {base !== "GBP" && (
                <div className="rate-item">
                 <span className="currency-label">🇬🇧 GBP</span>
-                <span className="currency-value">{calculateRate(rates.GBP)} £</span>
+                <span className="currency-value">{calculateRate("GBP")} £</span>
               </div>
+               )}
+               {/* Ekstra Birimler */}
+               <div className="rate-item">
+                <span className="currency-label">🇯🇵 JPY</span>
+                <span className="currency-value">{calculateRate("JPY")} ¥</span>
+               </div>
             </div>
 
-            {/* ALTIN & EMTİA BÖLÜMÜ */}
-            <h3 className="section-title" style={{marginTop: '20px'}}> <Coins size={18} style={{marginRight:'5px'}}/> Altın & Gümüş</h3>
+            <h3 className="section-title" style={{marginTop: '20px'}}> <Coins size={18} style={{marginRight:'5px', color:'gold'}}/> Altın & Gümüş</h3>
             <div className="rates-grid">
               
-              {/* Gram Altın */}
               <div className="rate-item gold-item">
                 <div className="icon-badge gold-bg"><TrendingUp size={16}/></div>
                 <span className="currency-label">Gram Altın (24K)</span>
                 <span className="currency-value">{calculateGold("GRAM")} {base === 'TRY' ? '₺' : base}</span>
               </div>
 
-              {/* Çeyrek Altın */}
               <div className="rate-item gold-item">
                  <div className="icon-badge gold-bg"><Coins size={16}/></div>
-                <span className="currency-label">Çeyrek Altın (Yeni)</span>
+                <span className="currency-label">Çeyrek Altın</span>
                 <span className="currency-value">{calculateGold("CEYREK")} {base === 'TRY' ? '₺' : base}</span>
               </div>
 
-              {/* Gram Gümüş */}
               <div className="rate-item silver-item">
                 <div className="icon-badge silver-bg"><TrendingUp size={16}/></div>
                 <span className="currency-label">Gram Gümüş</span>
